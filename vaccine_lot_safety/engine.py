@@ -3,8 +3,7 @@ Core Algorithmic Engine & Cryptographic / Biological Logic for VaccineLot-Sentin
 Domain: Public Health
 Standard: CDC / FDA Vaccine Safety Datalink Methods
 """
-import math
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from .models import FrontierPayload, AgentTelemetryAlert, ExecutionStatus
 
 

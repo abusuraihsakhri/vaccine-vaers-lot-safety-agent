@@ -6,7 +6,7 @@ Standard: CDC / FDA Vaccine Safety Datalink Methods
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Dict, Any
 
 
 class ExecutionStatus(str, Enum):

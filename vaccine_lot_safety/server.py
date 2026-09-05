@@ -1,7 +1,7 @@
 """
 FastAPI REST API Server for VaccineLot-Sentinel: CDC / FDA VAERS Lot Clustering & Safety Agent.
 """
-from typing import Dict, Any
+from typing import Any
 from .models import FrontierPayload
 from .agents import VaccineLotCoordinator
 

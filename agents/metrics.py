@@ -1,7 +1,6 @@
 """
 Prometheus Operational Metrics Exporter for vaccine-vaers-lot-safety-agent.
 """
-import time
 from typing import Dict, Any
 
 class SystemMetricsCollector:
