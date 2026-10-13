@@ -34,6 +34,11 @@ def main(argv=None):
     p_batch.add_argument("-i", "--input", required=True)
     p_batch.add_argument("-o", "--output", default="results.csv")
 
+    # Descriptive VAERSVAX lot report counts
+    p_lots = subparsers.add_parser("lots", help="Count distinct report IDs by lot in VAERSVAX CSV")
+    p_lots.add_argument("-i", "--input", required=True)
+    p_lots.add_argument("-o", "--output", default="lot_report_counts.csv")
+
     # Verify Audit
     subparsers.add_parser("verify-audit", help="Verify HMAC audit trail integrity")
 
@@ -77,6 +82,19 @@ def main(argv=None):
         trail = AuditLogger.get_trail()
         valid = AuditLogger.verify_integrity()
         print(f"Audit Trail Blocks: {len(trail)} | Cryptographic Integrity Verified: {valid}")
+        return 0
+
+    if args.command == "lots":
+        from vaers_lots import read_vaers_vax, write_lot_csv
+        try:
+            rows, stats = read_vaers_vax(args.input)
+            write_lot_csv(args.output, rows)
+        except (OSError, UnicodeError, ValueError, csv.Error) as exc:
+            print(f"VAERSVAX analysis failed: {exc}", file=sys.stderr)
+            return 1
+        print(f"Read {stats['input_rows']} rows; excluded {stats['excluded_rows']} missing-ID/lot rows.")
+        print(f"{stats['lot_groups']} groups; {stats['distinct_lot_report_associations']} distinct lot-report associations -> {args.output}")
+        print("Counts are not vaccine safety rates, statistical signals, or evidence of causation.")
         return 0
 
     if args.command == "batch":

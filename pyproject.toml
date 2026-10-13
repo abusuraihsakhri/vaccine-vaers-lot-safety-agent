@@ -1,27 +1,30 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vaccine-vaers-lot-safety-engine"
-version = "2.0.0"
-description = "VaccineLot-Sentinel: CDC / FDA VAERS Lot Clustering & Safety Engine"
+name = "vaccine-vaers-lot-safety-agent"
+version = "2.1.0"
+description = "Descriptive VAERS lot report counts and illustrative rule-based auditing tools"
 readme = "README.md"
-authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
-license = { text = "MIT" }
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Topic :: Security/Cryptography",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-]
-requires-python = ">=3.9"
-dependencies = []
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = ["pydantic>=2,<3"]
+
+[project.optional-dependencies]
+api = ["fastapi>=0.110,<1", "uvicorn>=0.27,<1"]
+dev = ["pytest>=8,<10"]
 
 [project.scripts]
+vaccine-vaers-lot-safety-agent = "cli:main"
 vaccine-vaers-lot-safety-engine = "vaccine_lot_safety.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/abusuraihsakhri/vaccine-vaers-lot-safety-engine"
-Repository = "https://github.com/abusuraihsakhri/vaccine-vaers-lot-safety-engine.git"
+Homepage = "https://github.com/abusuraihsakhri/vaccine-vaers-lot-safety-agent"
+Repository = "https://github.com/abusuraihsakhri/vaccine-vaers-lot-safety-agent"
+
+[tool.setuptools]
+py-modules = ["cli", "vaers_lots", "enrichment", "simulator", "vaccine_lot_safety_app"]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "vaccine_lot_safety*"]

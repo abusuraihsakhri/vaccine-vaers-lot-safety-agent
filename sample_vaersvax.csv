@@ -1,0 +1,6 @@
+VAERS_ID,VAX_TYPE,VAX_MANU,VAX_LOT
+S01,COVID19,Example Manufacturer,DEMO-A1
+S01,COVID19,Example Manufacturer,DEMO-A1
+S02,COVID19,Example Manufacturer,DEMO-A1
+S03,FLU,Example Manufacturer,DEMO-B2
+S04,FLU,Example Manufacturer,UNKNOWN
