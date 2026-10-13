@@ -1,186 +1,67 @@
 # Vaccine VAERS Lot Safety Agent
 
-> **Domain:** Clinical Decision Support & Biomedical Computing  
-> **Reference Guidelines & Standards:** `Standard Clinical Formulations & ISO/IEC Quality Frameworks`
+Local, descriptive exploration of **VAERS vaccine-lot report associations**. Upload an official VAERSVAX CSV in the browser or use the Python CLI to summarize the number of distinct reported `VAERS_ID` values per vaccine type, manufacturer, and normalized lot identifier.
 
-<div align="center">
+> **Interpretation:** These are counts of reported events following vaccination, **not** adverse-event incidence rates, adjusted risks, causal estimates, or validated safety signals. VAERS is a passive surveillance system with reporting bias and incomplete information. The tool has no administered-dose denominators, statistical scan procedure, or controlled comparisons. Never infer that a vaccine lot is unsafe from these counts alone. See the [official VAERS Data Guide](https://vaers.hhs.gov/data/dataguide.html).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+## Browser explorer
 
-</div>
+Open `web/index.html` in a modern browser, or use the repository's configured GitHub Pages deployment once active.
 
----
+1. Download VAERS public files from [vaers.hhs.gov/data.html](https://vaers.hhs.gov/data.html).
+2. Select the **VAERSVAX** vaccine table CSV (e.g. `2025VAERSVAX.csv`), not VAERSDATA or VAERSSYMPTOMS.
+3. Review unique report-lot counts, filter results, and export the summary CSV. Use **Load synthetic example** to test without real data.
 
-## 📖 What It Does
+Required columns: `VAERS_ID` and `VAX_LOT`. Optional grouping columns: `VAX_TYPE` and `VAX_MANU` (missing values are grouped as `UNKNOWN`). Lot strings are trimmed and uppercased; unreported or unknown lot values and missing report IDs are excluded. Exact duplicate report IDs in the *same* group are counted once; an ID may appear in multiple groups. This deduplication does not resolve secondary reports with different IDs or validate lot identifiers. No background rate, hypothesis test, or safety ranking is generated.
 
-Vaccine VAERS Lot Safety Agent is an enterprise-grade analytical engine for evaluating vaccine lot safety metrics. It processes task payloads through specialized worker agents that assess primary parameters, safety boundaries, and protocol conformance, producing cryptographically signed consensus dossiers with HMAC-SHA256 audit trails.
+**Privacy:** The browser reads the selected file locally; CSV records are not sent to a server, third party, or browser storage. It displays and exports aggregate counts only. Public VAERS data may still contain sensitive free text—avoid uploading private patient files. CSV exports escape spreadsheet formulas. Browser uploads are limited to 20 MB; use the Python CLI for larger inputs.
 
----
+## Python CLI
 
-## ⚙️ Key Capabilities & Algorithmic Modules
-
-- **Deterministic Calculation Engine**: Strict compliance with standard reference formulations and thresholds.
-- **Risk & Urgency Classification**: Multi-tier categorization (ROUTINE, ELEVATED_RISK, CRITICAL_STAT_PANIC) with automated clinical/operational action recommendations.
-- **Validation & Guardrails**: Rigorous input bounds checking and anomaly detection.
-- **Multi-Worker Architecture**: Three specialized workers (InvariantQC, SafetyEscalation, ProtocolConformance) provide comprehensive evaluation.
-
----
-
-## 💻 Installation
+Requires Python 3.10 or later.
 
 ```bash
-# Clone the repository
-git clone https://github.com/abusuraihsakhri/vaccine-vaers-lot-safety-agent.git
-cd vaccine-vaers-lot-safety-agent
-
-# Install dependencies
-pip install fastapi uvicorn pydantic pytest
+python -m pip install -e ".[api,dev]"
+python cli.py lots -i sample_vaersvax.csv -o lot_report_counts.csv
+python cli.py lots -i /path/to/2025VAERSVAX.csv -o lot_report_counts.csv
 ```
 
----
+The output includes `vaccine_type`, `manufacturer`, `lot`, and `report_count`. The CSV source is read locally. There is no outbound API access.
 
-## 💻 CLI Quickstart & Usage
+The pre-existing **illustrative**, rule-based task evaluator remains available:
 
-### 1. Single Task Evaluation
 ```bash
-python cli.py audit --task-id TASK-001 --target TARGET-01 --primary 28.5 --secondary 14.2 --critical --status DISCORDANT
-```
-
-### 2. System Configuration Query
-```bash
-python cli.py chat "What is the system status?"
-```
-
-### 3. Batch Processing
-```bash
+python cli.py audit --task-id DEMO-01 --target LOT-01 --primary 28.5 --secondary 14.2 --critical
 python cli.py batch -i sample.csv -o results.csv
-```
-
-### 4. Verify Audit Trail Integrity
-```bash
+python cli.py chat "What is the system status?"
 python cli.py verify-audit
-```
-
-### 5. Launch REST API Server
-```bash
 python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
-### Parameter Reference
-- `--task-id`: Unique task/case identifier (default: TASK-2026-001)
-- `--target`: Target entity identifier (default: KEY-TARGET-01)
-- `--primary`: Primary measurement value (float, default: 28.5)
-- `--secondary`: Secondary metric value (float, default: 14.2)
-- `--critical`: Flag for emergency escalation (boolean)
-- `--status`: Status descriptor (default: DISCORDANT)
+The `audit`, `batch`, and `/api/audit` paths evaluate generic supplied metrics against fixed illustrative thresholds; they do **not** import VAERS data or implement validated CDC/FDA methods, spatial-temporal Poisson scans, or clinical decision support. Mock chat is deterministic placeholder output, not scientific verification.
 
-### Input Data Schema
+## REST API and Docker
 
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `task_id` | Unique task/case identifier | Required |
-| `target_identifier` | Target entity identifier | Required |
-| `primary_metric` | Primary measurement value | Required |
-| `secondary_metric` | Secondary metric value | Optional (default: 0.0) |
-| `is_critical_flag` | Emergency escalation flag | Optional (default: false) |
-| `status_descriptor` | Status code descriptor | Optional (default: NOMINAL) |
-
----
-
-## 🛡️ Security & Enterprise Architecture
-
-* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, emails, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation with full integrity verification.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
-
-### Security Configuration
-
-Set the `AUDIT_SECRET_KEY` environment variable for persistent audit integrity across restarts:
+Install the `api` extra and start the REST API as above. Local API: `http://127.0.0.1:8000/docs`. Available endpoints include `/health`, `/metrics` (JSON counters), `/api/audit`, `/api/chat`, and `/api/audit/logs`. The in-memory HMAC audit chain provides tamper detection within a process but is not persistent unless externally archived; `AUDIT_SECRET_KEY` selects a stable signing key. The regex-based identifier filter does **not** guarantee comprehensive PHI removal or HIPAA compliance. Do not submit patient-identifiable data to this demonstration API.
 
 ```bash
-# Linux/macOS
-export AUDIT_SECRET_KEY="your-secure-random-key"
-
-# Windows
-set AUDIT_SECRET_KEY=your-secure-random-key
-
-# Docker Compose
-AUDIT_SECRET_KEY=your-secure-random-key docker-compose up
+docker compose up --build
 ```
 
----
+Docker Compose binds to `127.0.0.1:8000` by default, not a public interface. To bind another address, set `BIND_ADDRESS` explicitly. Do not expose the unauthenticated API publicly without adding authentication, access controls, TLS, and storage/retention safeguards.
 
-## 🧪 Testing & Verification
-
-Run the automated test suite:
+## Development and tests
 
 ```bash
-pytest -v
+python -m pip install -e ".[api,dev]"
+python -m pytest -q
+node --test tests/test_web_lots.cjs
+node --check web/app.js
+node --check web/lot_analysis.js
 ```
 
-Execute high-throughput batch simulation benchmarks:
+CI tests Python 3.10–3.13 and the browser CSV module; a separate GitHub Pages workflow publishes the static `web/` directory on `master`. The browser implementation uses plain JavaScript rather than Pyodide: no Python runtime or server is required for the CSV workflow. Tested browser engine syntax with Node; full cross-browser compatibility should be confirmed for target environments.
 
-```bash
-python simulator.py 1000
-```
+## License
 
----
-
-## 🐳 Container Deployment
-
-```bash
-# Build and run with Docker
-docker build -t vaccine-vaers-lot-safety-agent .
-docker run -p 8000:8000 -e AUDIT_SECRET_KEY=your-key vaccine-vaers-lot-safety-agent
-
-# Or use Docker Compose
-AUDIT_SECRET_KEY=your-key docker-compose up
-```
-
----
-
-## 📁 Project Structure
-
-```
-vaccine-vaers-lot-safety-agent/
-├── agents/                      # Core agent modules
-│   ├── __init__.py             # Package initialization
-│   ├── api.py                  # FastAPI REST server
-│   ├── base.py                 # Security, PHI guard, audit trail
-│   ├── learning.py             # Bayesian calibration engine
-│   ├── llm_factory.py          # LLM provider factory
-│   ├── metrics.py              # Prometheus metrics exporter
-│   ├── models.py               # Pydantic data models
-│   ├── streamer.py             # WebSocket telemetry streamer
-│   ├── supervisor.py           # Supervisor orchestrator
-│   └── workers.py              # Specialized worker agents
-├── tests/                      # Test suite
-│   ├── test_vaccine_vaers_lot_safety_agent.py
-│   ├── test_vaccine_lot_safety.py
-│   └── test_enrichment.py
-├── vaccine_lot_safety/          # Alternative implementation package
-├── web/                        # Web operations console
-├── cli.py                      # Main CLI entry point
-├── simulator.py                # High-throughput simulation
-├── enrichment.py               # Enrichment feature modules
-├── sample.csv                  # Sample batch input
-├── sample_payload.json         # Sample API payload
-├── benchmark_dataset.json      # Benchmark test cases
-├── pyproject.toml              # Project configuration
-├── Dockerfile                  # Container build
-├── docker-compose.yml          # Container orchestration
-└── .github/workflows/ci.yml    # CI/CD pipeline
-```
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
