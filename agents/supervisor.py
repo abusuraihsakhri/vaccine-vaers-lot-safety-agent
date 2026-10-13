@@ -3,6 +3,7 @@ Supervisor Orchestrator & Operations Intelligence for Vaccine Vaers Lot Safety A
 Domain: Clinical & Biomedical AI
 """
 import uuid
+import json
 from typing import Dict, List
 from .base import AuditLogger, PHIGuard
 from .models import SystemTaskPayload, AgentAlert, ConsensusDossier, UrgencyLevel, SystemIntegrityStatus
@@ -25,6 +26,7 @@ class SystemSupervisor:
         PHIGuard.assert_no_phi(payload.task_id)
         PHIGuard.assert_no_phi(payload.target_identifier)
         PHIGuard.assert_no_phi(payload.status_descriptor)
+        PHIGuard.assert_no_phi(json.dumps(payload.attributes))
 
         # Multi-worker evaluations
         all_alerts: List[AgentAlert] = []
@@ -66,7 +68,7 @@ class SystemSupervisor:
             total_alerts=len(all_alerts),
             critical_alerts_count=crit_count,
             alerts=all_alerts,
-            consensus_summary=f"Multi-agent consensus completed with status [{overall_urgency.value}]. Total alerts: {len(all_alerts)}.",
+            consensus_summary=f"Illustrative rule-based classification [{overall_urgency.value}] with {len(all_alerts)} alerts; not a validated VAERS safety determination.",
             audit_hash=audit_entry["current_hash"],
         )
 
